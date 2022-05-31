@@ -19,6 +19,9 @@ from .tasks import hello, printer
 from django.core.cache import cache
 import logging
 from django.utils.translation import gettext as _ # импортируем функцию для перевода
+from django.utils import timezone
+from django.shortcuts import redirect
+import pytz #  импортируем стандартный модуль для работы с часовыми поясами
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +36,19 @@ class PostList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['value1'] =_('Сегодня ( ')
         context['time_now'] = datetime.utcnow()  # добавим переменную текущей даты time_now
-        context['value1'] = f"Все новости . общее количество новостей ->>{Post.objects.all().count()}"
+        value2=_(') Все новости . общее количество новостей ->>')
+        context['value3'] = f"{value2} {Post.objects.all().count()}"
+        context['current_time'] = timezone.now()
+        print (timezone.now())
+        context['timezones'] = pytz.common_timezones #  добавляем в контекст все доступные часовые пояса]
         return context
 
+    def post(self, request):
+        request.session['django_timezone'] = request.POST['timezone']
+        print (request.session['django_timezone'], timezone.now())
+        return redirect('http://127.0.0.1:8000/newsall/')
 
 class PostSearch(ListView):
     model = Post
@@ -125,6 +137,11 @@ class IndexView(View):  # тестирование Celery
         printer.apply_async([10], countdown = 5, expires=60)
         hello.delay()
         return HttpResponse('Hello!')
+
+# class Index(View):
+#     def get(self, request):
+#         string = _('Hello world')
+#         return HttpResponse(string)
 
 
 

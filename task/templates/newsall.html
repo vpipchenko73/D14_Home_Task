@@ -1,16 +1,55 @@
 <!--  наследуемся от шаблона default.html, который мы создавали ещё во времена flatpages -->
 {% extends 'flatpages/default.html' %}
+{% load i18n %}
+{% load tz %} <!-- не забываем загрузить тег для работы с часовыми поясами -->
 {% load my_filters %} <!-- не забываем заранее загружать наши фильтры! -->
 
 <!-- Название у нас будет posts -->
 {% block title %}
 Posts
 {% endblock title %}
+<!-- Если сейчас больше чем 19 или же меньше 7, то выводим тёмную тему, иначе выводим светлую -->
 
 <!-- В контенте на странице мы выводим все новости -->
 
 {% block content %}
-   <h3>{{"Сегодня-"}}{{time_now|date:'M / d / Y'}} {{value1}}</h3>
+
+   <style>
+        body {background-color: {% if current_time.hour >= 17 or current_time.hour <= 7 %} red {% else %} yellow {% endif %};}
+   </style>
+    <hr>
+   <h3>     {{current_time}} {{"test"}}</h3>
+   <hr>
+   <form action="{% url 'set_language' %}" method="POST"> {% csrf_token %} <!-- Не забываем по csrf_token для POST-запросов -->
+        <input type="hidden" name="next" value="{{ redirect_to }}">
+
+        <select name="language" id="">
+            {% get_available_languages as LANGUAGES %} <!-- получаем языки -->
+            {% get_language_info_list for LANGUAGES as languages %} <!-- Помещаем их в список languages -->
+
+            {% for language in languages %} <!-- Итерируясь по списку, выводим их название на языке пользователя и код -->
+                <option value="{{ language.code }}" {% if language.code == LANGUAGE_CODE %} selected {% endif %} >
+                    {{ language.name_local }} - {{ language.code }}
+                </option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="set">
+    </form>
+    {% get_current_timezone as TIME_ZONE %}
+    <form action="" method="POST">
+        {% csrf_token %}
+        <label for="timezone">Time zone:</label>
+        <select name="timezone">
+            {% for tz in timezones %}
+            <option value="{{ tz }}"{% if tz == TIME_ZONE %} selected{% endif %}>{{ tz }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Set">
+    </form>
+    {{ TIME_ZONE }}
+    {{ current_time|timezone:TIME_ZONE }} <!-- Отображаем время в выбранном часовом поясе  -->
+
+   <h3>{{value1}}{{time_now|date:'M / d / Y'}}{{value3}}</h3>
    <hr>
    <hr>
    <font size="2">
@@ -18,23 +57,26 @@ Posts
         <table>
             <tr>
                 <td >
-                    Название
+                    {% trans "Название" %}
                 </td>
                 <td >
-                    Категория
+                    {% trans "Категория" %}
                 </td>
                 <td>
-                    Дата создания
+                    {% trans "Дата создания" %}
                 </td>
                 <td>
-                    Содержание
+                    {% trans "Содержание" %}
             </tr>
+
+
+
    {% for news in newsall %} <!-- Для каждой новости будете генерироваться новая строчка, т. е. новый html-код. При этом сам цикл работает точно также, как и в Python. product — переменная цикла, т. е. наш товар, взятый из общего списка -->
             <tr>
                 <td align="left">
                      <a href="{% url 'news_detail' news.id %}">{{ news.title|truncatewords:3|Censor }}</a> <!-- При нажатии на название новости в таблице нас теперь будет перекидывать на страницу  самой новости -->
-                     <a  href="{% url 'news_update' news.id %}"><u>Редактировать</u></a> <!-- добавим ссылку на редактирование товара-->
-                     <a  href="{% url 'news_delete' news.id %}"><u> Удалить </u></a> <!-- добавим ссылку на удаление товара-->
+                     <a  href="{% url 'news_update' news.id %}"><u>{% trans "Редактировать" %}</u></a> <!-- добавим ссылку на редактирование товара-->
+                     <a  href="{% url 'news_delete' news.id %}"><u> {% trans "Удалить" %} </u></a> <!-- добавим ссылку на удаление товара-->
                 </td>
                 <td align="left">
                 {% for cat_name in news.category_post.all %}

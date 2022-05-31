@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['127.0.0.1']
 # Application definition
 
 INSTALLED_APPS = [
+    'modeltranslation', # обязательно впишите его перед админом  переводчик моделей
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,11 +60,13 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware', # Для возможности выбора языка перевода и именно в этой позиции
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'news.middlewares.TimezoneMiddleware', # добавляем свое middleware для работы с часовыми поясами !
 ]
 
 ROOT_URLCONF = 'task.urls'
@@ -136,13 +139,22 @@ SITE_ID = 1
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
-
+#LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
 USE_TZ = True
+
+# LANGUAGES = [
+#     ('en-us', 'English'),
+#     ('ru', 'Русский')
+# ]
+LANGUAGES = [
+    ('ru', 'Русский'),
+    ('en-us', 'English')
+]
 
 
 EMAIL_HOST = 'smtp.yandex.ru'  # адрес сервера Яндекс-почты для всех один и тот же
@@ -199,138 +211,140 @@ CACHES = {
     }
 }
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-           '()': 'django.utils.log.RequireDebugFalse',
-        },
-        'require_debug_true': {
-           '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'formatters':{  # задаем формат вывода данных
-        'f_debug': {
-           'format': '{levelname} {asctime}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        'f_info': {
-           'format': '{levelname} {message} {asctime} {module}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        'f_warning': {
-           'format': '{levelname} {message} {asctime} {pathname}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        'f_error': {
-           'format': '{levelname} {message} {asctime} {exc_info}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        'f_error_2': {
-           'format': '{asctime} {levelname} {message} {pathname} {exc_info}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        'f_security': {
-           'format': '{asctime} {levelname} {module} {message}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        'f_mail': {
-           'format': '{asctime} {levelname} {message} {pathname}',
-           'datetime': '%Y.%m.%d  %H:%M:%S',
-           'style': '{'
-           },
-        },
-    'handlers': {    # задаем формат  обработки данных
-        'console_d': {
-             'level': 'DEBUG',
-             'class': 'logging.StreamHandler',
-             'formatter': 'f_debug',
-             'filters': ['require_debug_true'],
-             },
-        'console_w': {
-             'level': 'WARNING',
-             'class': 'logging.StreamHandler',
-             'formatter': 'f_warning',
-             'filters': ['require_debug_true'],
-             },
-        'console_e': {
-             'level': 'ERROR',
-             'class': 'logging.StreamHandler',
-             'formatter': 'f_error',
-             'filters': ['require_debug_true'],
-             },
-        'file_i': {
-             'level': 'INFO',
-             'class': 'logging.FileHandler',
-             'filename': 'general.log',
-             'formatter': 'f_info',
-             'filters': ['require_debug_false'],
-             },
-        'file_e': {
-             'level': 'ERROR',
-             'class': 'logging.FileHandler',
-             'filename': 'errors.log',
-             'formatter': 'f_error_2',
-             },
-        'file_s': {
-             'level': 'DEBUG',
-             'class': 'logging.FileHandler',
-             'filename': 'security.log',
-             'formatter': 'f_security',
-             },
-        'mail_admin': {
-             'level': 'INFO',
-             'class': 'django.utils.log.AdminEmailHandler',
-             'formatter': 'f_mail',
-             'filters': ['require_debug_false'],
-             },
-        },
 
-    'loggers': {  # задаем формат  регистрации данных
-        'django':{
-              'handlers':['console_d','console_w', 'console_e','file_i'],
-               'level': 'DEBUG',
-        },
-        'django.request': {
-              'handlers':['file_e', 'mail_admin'],
-              'level': 'ERROR',
-              'propagate': False, # если установить в true то передатст обработку в обработчик джанго
-        },
-        'django.server': {
-              'handlers':['file_e', 'mail_admin'],
-              'level': 'ERROR',
-              'propagate': False, # если установить в true то передатст обработку в обработчик джанго
-        },
-        'django.template': {
-              'handlers':['file_e'],
-              'level': 'ERROR',
-              'propagate': False, # если установить в true то передатст обработку в обработчик джанго
-        },
-        'django.template': {
-              'handlers':['file_e'],
-              'level': 'ERROR',
-              'propagate': False, # если установить в true то передатст обработку в обработчик джанго
-        },
-        'django.db_backends': {
-              'handlers':['file_e'],
-              'level': 'ERROR',
-              'propagate': False, # если установить в true то передатст обработку в обработчик джанго
-        },
-        'django.security': {
-              'handlers':['file_s'],
-              'level': 'DEBUG',
-              'propagate': False, # если установить в true то передатст обработку в обработчик джанго
-        },
 
-    },
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'require_debug_false': {
+#            '()': 'django.utils.log.RequireDebugFalse',
+#         },
+#         'require_debug_true': {
+#            '()': 'django.utils.log.RequireDebugTrue',
+#         },
+#     },
+#     'formatters':{  # задаем формат вывода данных
+#         'f_debug': {
+#            'format': '{levelname} {asctime}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         'f_info': {
+#            'format': '{levelname} {message} {asctime} {module}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         'f_warning': {
+#            'format': '{levelname} {message} {asctime} {pathname}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         'f_error': {
+#            'format': '{levelname} {message} {asctime} {exc_info}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         'f_error_2': {
+#            'format': '{asctime} {levelname} {message} {pathname} {exc_info}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         'f_security': {
+#            'format': '{asctime} {levelname} {module} {message}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         'f_mail': {
+#            'format': '{asctime} {levelname} {message} {pathname}',
+#            'datetime': '%Y.%m.%d  %H:%M:%S',
+#            'style': '{'
+#            },
+#         },
+#     'handlers': {    # задаем формат  обработки данных
+#         'console_d': {
+#              'level': 'DEBUG',
+#              'class': 'logging.StreamHandler',
+#              'formatter': 'f_debug',
+#              'filters': ['require_debug_true'],
+#              },
+#         'console_w': {
+#              'level': 'WARNING',
+#              'class': 'logging.StreamHandler',
+#              'formatter': 'f_warning',
+#              'filters': ['require_debug_true'],
+#              },
+#         'console_e': {
+#              'level': 'ERROR',
+#              'class': 'logging.StreamHandler',
+#              'formatter': 'f_error',
+#              'filters': ['require_debug_true'],
+#              },
+#         'file_i': {
+#              'level': 'INFO',
+#              'class': 'logging.FileHandler',
+#              'filename': 'general.log',
+#              'formatter': 'f_info',
+#              'filters': ['require_debug_false'],
+#              },
+#         'file_e': {
+#              'level': 'ERROR',
+#              'class': 'logging.FileHandler',
+#              'filename': 'errors.log',
+#              'formatter': 'f_error_2',
+#              },
+#         'file_s': {
+#              'level': 'DEBUG',
+#              'class': 'logging.FileHandler',
+#              'filename': 'security.log',
+#              'formatter': 'f_security',
+#              },
+#         'mail_admin': {
+#              'level': 'INFO',
+#              'class': 'django.utils.log.AdminEmailHandler',
+#              'formatter': 'f_mail',
+#              'filters': ['require_debug_false'],
+#              },
+#         },
 #
-
-}
+#     'loggers': {  # задаем формат  регистрации данных
+#         'django':{
+#               'handlers':['console_d','console_w', 'console_e','file_i'],
+#                'level': 'DEBUG',
+#         },
+#         'django.request': {
+#               'handlers':['file_e', 'mail_admin'],
+#               'level': 'ERROR',
+#               'propagate': False, # если установить в true то передатст обработку в обработчик джанго
+#         },
+#         'django.server': {
+#               'handlers':['file_e', 'mail_admin'],
+#               'level': 'ERROR',
+#               'propagate': False, # если установить в true то передатст обработку в обработчик джанго
+#         },
+#         'django.template': {
+#               'handlers':['file_e'],
+#               'level': 'ERROR',
+#               'propagate': False, # если установить в true то передатст обработку в обработчик джанго
+#         },
+#         'django.template': {
+#               'handlers':['file_e'],
+#               'level': 'ERROR',
+#               'propagate': False, # если установить в true то передатст обработку в обработчик джанго
+#         },
+#         'django.db_backends': {
+#               'handlers':['file_e'],
+#               'level': 'ERROR',
+#               'propagate': False, # если установить в true то передатст обработку в обработчик джанго
+#         },
+#         'django.security': {
+#               'handlers':['file_s'],
+#               'level': 'DEBUG',
+#               'propagate': False, # если установить в true то передатст обработку в обработчик джанго
+#         },
+#
+#     },
+# #
+#
+# }
 

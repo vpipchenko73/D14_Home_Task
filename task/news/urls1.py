@@ -12,7 +12,8 @@ urlpatterns = [
     # Для этого вызываем метод as_view
     #path('<int:pk>', PostDetail.as_view()),
     # pk — это первичный ключ товара, который будет выводиться у нас в шаблон
-    path('', cache_page(60)(PostList.as_view())),
+    #path('', cache_page(60)(PostList.as_view())), # кэширование страницы в течении 60 секунд
+    path('', PostList.as_view()),
     path('<int:pk>/', PostDetailView.as_view(), name='news_detail'), # ссылка на конкретную новость
     path('create/', PostCreateView.as_view(), name='news_create'),#ссылка на создание новости
     path('create/<int:pk>', PostUpdateView.as_view(), name='news_update'), #ссылка на редактирование новости

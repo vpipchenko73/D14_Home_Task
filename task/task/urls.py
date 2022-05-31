@@ -28,5 +28,7 @@ urlpatterns = [
     path('accounts/', include('allauth.urls')),
     # делаем так, чтобы все адреса из нашего приложения (news/urls1.py)
     # сами автоматически подключались когда мы их добавим.
+    path('i18n/', include('django.conf.urls.i18n')), # подключаем встроенные эндопинты для работы с локализацией
+    #path('admin/', admin.site.urls),
 
 ]
